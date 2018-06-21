@@ -1,0 +1,144 @@
+#### Core parameters
+
+- config (=config_file)
+- task (=training)
+  - `train`, `predict`, `convert_model`, `refit`
+- application (= objective, app)
+  - `regression`, `regression_l1`, `huber`, `fair`, `poisson`, `quantile`, `mape`, `gammma`, `tweedie`, 
+  - `binary`, 
+  - `multiclass`, `multiclassova`, 
+  - `xentropy`, `xentlambda`, 
+  - `lambdarank`
+- boosting (=boost, boosting_type)
+  - `gbdt`, `rf`, `dart`, `goss`
+- data (=train, train_data)
+- valid (=test, valid_data, test_data)
+- num_interations (=num_iteration, num_tree, num_trees, num_round, num_rounds, num_boost_round, n_estimators)
+- learning_rate (=num_leaf)
+- num_levaes (=num_leaf)
+- tree_learner (=tree)
+  - `serial`, `feature`, `data`, `voting`
+- num_threads (=num_thread, nthread)
+- device 
+  - `cpu`, `gpu`
+
+#### Learning control parameters
+
+- max_depth
+  - default = -1 (int)
+  - limit the max depth for tree model. This is used to deal with over-fitting when `#data` is small. Tree still grows by leaf-wise
+- min_data_in_leaf 
+  - Can be used to deal with over-fitting
+- min_sum_hessian_in_leaf
+  - default = 1e-3 (0.001) (double)
+  - Can be used to deal with over-fitting
+- feature_fraction (=sub_feature)
+  - default = 1.0 (double, 0.0 <=  value > =1.0)
+  - LightGBM will randomly select part of features on each iteration if `feature_fraction`smaller than `1.0`. For example, if set to `0.8`, will select 80% features before training each tree
+  - can be used to speed up training
+  - can be used to deal with over-fitting
+- feature_fraction_seed 
+  - default = 2 (int)
+  - random seed
+- bagging_fraction (=sub_row, subsample)
+  - default = 1.0 (double, 0.0 <=  value > =1.0)
+  - like `feature_fraction`, but this will randomly select part of data without resampling
+  - can be used to speed up training
+  - can be used to deal with over-fitting
+  - **Note**: To enable bagging, `bagging_freq` should be set to a non zero value as well
+- bagging_freq
+  - default = 0 (int)
+  - frequency for bagging, `0` means disable bagging. `k` means will perform bagging at every `k` iteration
+  - **Note**: to enable bagging, `bagging_fraction` should be set as well
+- bagging_seed
+  - default = 3 (int)
+- early_stopping_round
+  - default = 0 (int)
+  - will stop training if one metric of one validation data doesn't improve in last `early_stopping_round`  rounds
+- lambda_l1 (=reg_alpha)
+  - default = 0 (double)
+- lambda_l2 (=reg_lambda)
+  - default = 0 (double)
+- max_delta_step
+  - default = 0 (double)
+  - Used to limit the max output of tree leaves
+  - when <= 0, there is not constraint
+  - the final max output of leaves is `learning_rate*max_delta_step`
+- min_split_gain
+  - default = 0 (double)
+  - the minimal gain to perform split
+- drop_rate
+  - defalut = 0.1 (double, 0.0 <=  value > =1.0)
+  - only used in `dart`
+- skip_drop
+  - defalut = 0.5 (double, 0.0 <=  value > =1.0)
+  - only used in dart, probability of skipping drop
+- max_drop
+  - defalut 50 (int)
+  - only used in dart, max number of dropped trees on one iteration 
+  - `<=0` means no limit
+- uniform_drop
+  - default = false (bool)
+  - only used in dart
+- xgboost_dart_mode
+  - default = false (bool)
+  - only used in dart
+- drop_seed
+  - default = 4 (int)
+  - only used in dart
+- top_rate
+  - default = 0.2 (double)
+  - only used in goss
+- other_rate
+  - default = 0.1 (double)
+  - only used in goss
+- min_data_per_group
+- max_cat_threshold
+  - use for categorical features
+  - limit the max threshold points in categorical features
+- cat_smooth
+  - default = 10 (double)
+  - used for the categorical features
+  - this can reduce the effect of noises in categorical features, especially for categories with few data
+- cat_l2
+  - default = 10 (double)
+  - L2 regularization in categorical split
+- max_cat_to_onehot
+  - default = 4 (int)
+  - when number of categories of one feature smaller than or equal to `max_cat_to_onehot, one-vs-other split algorithm sill be used
+- top_k
+  - default = 20 (int)
+  - used in Voting parallel
+  - set this to larger value for more accurate result, but it will slow down the trainig speed
+-  monotone_constraint
+  - used for constraints of monotonic features
+  - `1` means increasing, `-1` means decreasing, `0` means non-constraint
+  - you need to specify all features in order. For example, `mc=-1,0,1` means the decreasing for 1st feature, non-constraint for 2nd feature and increasing for the 3rd feature
+
+#### IO parameters
+
+- max_bin
+  - max number of bins that feature values will be bucketed in. Small number of bins may reduce training accuracy but may increase general power (deal with over-fitting)
+  - LightGBM will auto compress memory according `max_bin`. For example, LightGBM will use `uint8_t` for feature value if `max_bin=255`
+- min_data_in_bin
+  - default = 3 (int)
+  - use this to avoid one-data-one-bin (may over-fitting)
+- data_random_seed
+  - default = 1 (int)
+  - random seed for data partition in parallel learning (not include feature parallel)
+- output_model
+  - file name of input model
+- input_model
+  - file name of input model
+  - for `prediction` task, this model will be used for prediction data
+  - for `train` task, training will be continued from this model
+- output_result
+  - file name of prediction result in `prediction` task
+- pre_partition
+  - used for parallel learning (not include feature parallel)
+  - `true` if training data are pre-partitioned, and different machines use different partitions
+- is_sparse
+  - used to enable/disable sparse optimization. Set to `false` to disable sparse optimization
+- two_round
+  - by default, LightGBM will map data file to memory and load features from memory. This will provide faster data loading speed. But it may run out of memory when the data file is very big
+  - set this to `true` if data file is too big to fit in memory
